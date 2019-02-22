@@ -1,16 +1,16 @@
 # source packages
-source(file.path(PROJHOME, "code", "packages.R"))
+source("code/packages.R")
 
 # source functions
-source(file.path(PROJHOME, "code", "functions.R"))
+source("code/functions.R")
 
 # other setup
 options(clustermq.scheduler = "multicore")
 
 # define initial inputs / parameters from input directory
 first <- list(
-  input1 = subdir_file("input/input1.csv"),
-  input2 = subdir_file("input/input2.csv")
+  input1 = "input/input1.csv",
+  input2 = "input/input2.csv"
 )
 
 # define plan
@@ -21,13 +21,19 @@ plan <- drake::drake_plan(
     dplyr::select(g, w),
   fourth = fn_third(third),
   doc = rmarkdown::render(
-    drake::knitr_in(subdir_file("code/document.Rmd")),
-    output_file = drake::file_out(subdir_file("output/document.pdf")))
+    input = drake::knitr_in("code/document.Rmd"),
+    output_file = drake::file_out("document.pdf"),
+    output_dir = "output"
+  )
 )
 
 # visualize plan (before build)
 config <- drake::drake_config(plan)
 drake::vis_drake_graph(config)
+
+# visualize dependencies of a target
+drake::deps_target(target = doc, config = config)
+drake::deps_target(target = fourth, config = config)
 
 # execute plan
 drake::make(plan, jobs = 2, parallelism = "clustermq")
@@ -36,6 +42,13 @@ drake::make(plan, jobs = 2, parallelism = "clustermq")
 config <- drake::drake_config(plan)
 drake::vis_drake_graph(config)
 
+# list cached objects
+drake::cached()
+
 # load the ggplot2 object returned by fn_third()
 drake::loadd(fourth)
 fourth
+
+# clean up cache after build
+drake::clean(garbage_collection = TRUE)
+drake::cached()
