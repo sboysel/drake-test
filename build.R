@@ -1,39 +1,16 @@
-if (!"drake" %in% row.names(installed.packages())) {
-  devtools::install_github("ropensci/drake")
-}
-
-if (!"here" %in% row.names(installed.packages())) {
-  install.packages("here")
-}
-
-# load all packages
-library(drake)
-library(here)
-library(tidyverse)
-
-# other setup
-here::set_here(verbose = FALSE)
+# source packages
+source(file.path(PROJHOME, "code", "packages.R"))
 
 # source functions
-source(here::here("code", "functions.R"))
+source(file.path(PROJHOME, "code", "functions.R"))
 
-# generate some sample input data
-N <- 500
-G <- 5
-readr::write_csv(
-  x = tibble::tibble(x = runif(N * G), y = runif(N * G), g = rep(letters[1:G], N)),
-  path = here::here("input", "input1.csv")
-)
-
-readr::write_csv(
-  x = tibble::tibble(g = rep(letters[1:G], N), z = rnorm(N * G), d = rbinom(N * G, 1, 0.5)),
-  path = here::here("input", "input2.csv")
-)
+# other setup
+options(clustermq.scheduler = "multicore")
 
 # define initial inputs / parameters from input directory
 first <- list(
-  input1 = here::here("input", "input1.csv"),
-  input2 = here::here("input", "input2.csv")
+  input1 = subdir_file("input/input1.csv"),
+  input2 = subdir_file("input/input2.csv")
 )
 
 # define plan
@@ -42,11 +19,22 @@ plan <- drake::drake_plan(
   third = second %>%
     dplyr::mutate(w = x * y * sum_dz) %>%
     dplyr::select(g, w),
-  fourth = fn_third(third)
+  fourth = fn_third(third),
+  doc = rmarkdown::render(
+    drake::knitr_in(subdir_file("code/document.Rmd")),
+    output_file = drake::file_out(subdir_file("output/document.pdf")))
 )
 
+# visualize plan (before build)
+config <- drake::drake_config(plan)
+drake::vis_drake_graph(config)
+
 # execute plan
-drake::make(plan)
+drake::make(plan, jobs = 2, parallelism = "clustermq")
+
+# visualize plan (after build)
+config <- drake::drake_config(plan)
+drake::vis_drake_graph(config)
 
 # load the ggplot2 object returned by fn_third()
 drake::loadd(fourth)

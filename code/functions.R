@@ -1,3 +1,20 @@
+# filepath functions
+subdir_file <- function(file) normalizePath(file.path(PROJHOME, file))
+
+# generate some sample input data
+N <- 500
+G <- 5
+readr::write_csv(
+  x = tibble::tibble(x = runif(N * G), y = runif(N * G), g = rep(letters[1:G], N)),
+  path = subdir_file("input/input1.csv"),
+)
+
+readr::write_csv(
+  x = tibble::tibble(g = rep(letters[1:G], N), z = rnorm(N * G), d = rbinom(N * G, 1, 0.5)),
+  path = subdir_file("input/input2.csv")
+)
+
+# fn_first
 fn_first <- function(first) {
   
   input1 <- readr::read_csv(file = first$input1)
@@ -14,12 +31,14 @@ fn_first <- function(first) {
   
 }
 
+# fn_second
 fn_second <- function(second) {
   second %>%
     dplyr::mutate(w = x * y * sum_dz) %>%
     dplyr::select(g, w)
 }
 
+# fn_third
 fn_third <- function(third) {
   ggplot2::ggplot(data = third, aes(x = w, fill = g, group = g)) +
     geom_density(alpha = 0.5)
