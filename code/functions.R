@@ -1,17 +1,14 @@
-# filepath functions
-subdir_file <- function(file) normalizePath(file.path(PROJHOME, file))
-
 # generate some sample input data
 N <- 500
 G <- 5
 readr::write_csv(
   x = tibble::tibble(x = runif(N * G), y = runif(N * G), g = rep(letters[1:G], N)),
-  path = subdir_file("input/input1.csv"),
+  path = "input/input1.csv",
 )
 
 readr::write_csv(
   x = tibble::tibble(g = rep(letters[1:G], N), z = rnorm(N * G), d = rbinom(N * G, 1, 0.5)),
-  path = subdir_file("input/input2.csv")
+  path = "input/input2.csv"
 )
 
 # fn_first

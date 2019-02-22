@@ -15,7 +15,7 @@ Start by reading the master build script `build.R`.
     - `temp`: write temp objects (if necessary) here
     - `output`: all final outputs should be generated here
 5. Use `drake::file_in()`, `drake::file_out()`, and `drake::knitr_in()` in `drake::drake_plan()` 
-6. Utility function is `subdir_file()` defined in `code/functions.R` to expand and normalize of a file located in some project subdirectory, e.g. `path/to/subdirectory/file`.  Note that the full relative path must be specified in `subdir_file()` so that `drake` correctly located the file.
+6. Note that a full relative path must be specified for files in subdirectories, e.g. `path/to/subdirectory/file`, so that `drake` correctly located the file.
 
 ## Requirements
 
